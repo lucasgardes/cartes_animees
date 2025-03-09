@@ -2,17 +2,17 @@ package com.example.cartesanimeesapp.ui.series
 
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.cartesanimeesapp.R
+import androidx.navigation.fragment.findNavController
 import com.example.cartesanimeesapp.databinding.FragmentSerieBinding
 import com.example.cartesanimeesapp.models.Serie
-import com.example.cartesanimeesapp.models.SerieElement
-import com.example.cartesanimeesapp.utils.AudioPlayer
 import com.bumptech.glide.Glide
-import android.net.Uri
+import com.example.cartesanimeesapp.R
+import com.example.cartesanimeesapp.models.SerieElement
 
 class SerieFragment : Fragment() {
 
@@ -34,64 +34,108 @@ class SerieFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 🔹 Récupération de la série sélectionnée (exemple avec un mock)
-        serie = Serie(
-            id = 1,
-            name = "Animaux",
-            imageUrl = "file:///android_asset/images/lion.jpg",
-            elements = listOf(
-                SerieElement("file:///android_asset/images/lion.jpg", "file:///android_asset/sounds/lion.mp3"),
-                SerieElement("file:///android_asset/images/elephant.jpg", "file:///android_asset/sounds/elephant.mp3"),
-                SerieElement("file:///android_asset/images/tiger.jpg", "file:///android_asset/sounds/tiger.mp3")
-            )
-        )
+        val serieId = arguments?.getInt("serieId")
 
-        updateUI()
+        if (serieId == null) {
+            Log.e("SerieFragment", "🚨 ERREUR : serieId est NULL !")
+            return
+        }
+        Log.d("SerieFragment", "✅ serieId reçu : $serieId")
 
-        // 🔹 Gérer le bouton "Suivant"
+        // Récupérer la série en fonction de l'ID
+        serie = getSerieById(serieId) ?: return
+
+        if (serie == null) {
+            Log.e("SerieFragment", "🚨 ERREUR : Aucune série trouvée pour ID = $serieId")
+        } else {
+            Log.d("SerieFragment", "✅ Série trouvée : ${serie?.name}")
+            loadSerieElement()
+        }
+
+        // Charger la première image et le son
+        loadSerieElement()
+
+        // Bouton pour rejouer le son
+        binding.btnPlaySound.setOnClickListener {
+            playAudio(serie.elements[currentIndex].audioResId)
+        }
+
+        // Bouton pour aller à l’image suivante
         binding.btnNext.setOnClickListener {
             if (currentIndex < serie.elements.size - 1) {
                 currentIndex++
-                updateUI()
+                loadSerieElement()
             }
         }
-
-        // 🔹 Gérer le bouton "Précédent"
         binding.btnPrev.setOnClickListener {
             if (currentIndex > 0) {
                 currentIndex--
-                updateUI()
+                loadSerieElement()
             }
         }
-
-        // 🔹 Gérer le bouton "Rejouer son"
-        binding.btnPlaySound.setOnClickListener {
-            playSound()
+        binding.btnReturnHome.setOnClickListener {
+            findNavController().navigate(R.id.action_serieFragment_to_homeFragment)
         }
     }
 
-    private fun updateUI() {
+    private fun loadSerieElement() {
         val currentElement = serie.elements[currentIndex]
-
-        // Charger l'image avec Glide depuis un fichier local ou une URL
-        Glide.with(requireContext())
-            .load(currentElement.imageUrl)
-            .into(binding.imageSerie)
-
-        // Lire le son
-        playSound()
+        Log.d("SerieFragment", "Serie chargée : ${serie.name}")
+        Log.d("SerieFragment", "Nombre d'éléments : ${serie.elements.size}")
+        if (currentElement.imageResId != 0) {
+            binding.imageSerie.setImageResource(currentElement.imageResId)
+        } else {
+            binding.imageSerie.setImageResource(R.drawable.placeholder)
+        }
+        Log.d("SerieFragment", "Chargement de l'image : ${currentElement.imageResId}")
+        // Jouer le son
+        playAudio(currentElement.audioResId)
     }
 
-    private fun playSound() {
+    private fun playAudio(audioResId: Int) {
+        // Arrêter et libérer l'ancien MediaPlayer
         mediaPlayer?.release()
-        mediaPlayer = MediaPlayer.create(requireContext(), Uri.parse(serie.elements[currentIndex].soundUrl))
+
+        // Créer un nouveau MediaPlayer
+        mediaPlayer = MediaPlayer.create(requireContext(), audioResId)
         mediaPlayer?.start()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        mediaPlayer?.release()
         _binding = null
+        mediaPlayer?.release()
+        mediaPlayer = null
+    }
+
+    fun getSerieById(id: Int): Serie? {
+        val seriesList = listOf(
+            Serie(1,
+                "Animaux",
+                R.drawable.serie_animaux,
+                elements = listOf(
+                    SerieElement(R.drawable.lion, R.raw.lion_sound),
+                    SerieElement(R.drawable.elephant, R.raw.elephant_sound),
+                    SerieElement(R.drawable.eagle, R.raw.eagle_sound)
+                )),
+            Serie(2,
+                "Météo",
+                R.drawable.serie_meteo,
+                elements = listOf(
+                    SerieElement(R.drawable.lion, R.raw.lion_sound),
+                    SerieElement(R.drawable.elephant, R.raw.elephant_sound),
+                    SerieElement(R.drawable.eagle, R.raw.eagle_sound)
+                )),
+            Serie(3,
+                "Transport",
+                R.drawable.serie_transport,
+                elements = listOf(
+                    SerieElement(R.drawable.lion, R.raw.lion_sound),
+                    SerieElement(R.drawable.elephant, R.raw.elephant_sound),
+                    SerieElement(R.drawable.eagle, R.raw.eagle_sound)
+                ))
+        )
+
+        return seriesList.find { it.id == id }
     }
 }
-

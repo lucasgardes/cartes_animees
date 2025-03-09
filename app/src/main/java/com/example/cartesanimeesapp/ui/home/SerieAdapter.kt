@@ -33,7 +33,7 @@ class SerieAdapter(
 
         // Utilisation de Glide pour charger l'image depuis une URL
         Glide.with(holder.itemView.context)
-            .load(serie.imageUrl)  // Assurez-vous que `imageUrl` est bien une URL valide
+            .load(serie.imageResId)  // Assurez-vous que `imageUrl` est bien une URL valide
             .placeholder(R.drawable.placeholder) // Image par défaut pendant le chargement
             .error(R.drawable.error_image) // Image en cas d'erreur
             .into(holder.imageView)

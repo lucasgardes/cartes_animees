@@ -8,9 +8,11 @@
 
     <ImageView
         android:id="@+id/imageSerie"
-        android:layout_width="300dp"
+        android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:scaleType="fitCenter" />
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder"/>
+
 
     <Button
         android:id="@+id/btnPlaySound"
@@ -38,6 +40,13 @@
             android:layout_height="wrap_content"
             android:text="Suivant"
             android:layout_marginStart="16dp"/>
+
+        <Button
+            android:id="@+id/btnReturnHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Retour à la sélection"
+            android:layout_marginTop="16dp"/>
     </LinearLayout>
 
 </LinearLayout>
