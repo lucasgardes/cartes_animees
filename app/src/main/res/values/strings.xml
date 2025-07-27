@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">CartesAnimeesApp</string>
+    <string name="app_name">Cartes Animées</string>
+    <string name="profile">Profil</string>
 </resources>

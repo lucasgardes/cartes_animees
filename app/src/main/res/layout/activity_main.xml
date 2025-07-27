@@ -4,14 +4,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="16dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Welcome to Cartes Animees App"
-        android:textSize="18sp"
-        android:layout_gravity="center" />
+    android:padding="2dp">
 
     <fragment
         android:id="@+id/nav_host_fragment"

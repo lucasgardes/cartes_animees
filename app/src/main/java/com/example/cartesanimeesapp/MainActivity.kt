@@ -2,6 +2,7 @@ package com.example.cartesanimeesapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.navigation.findNavController
 import com.example.cartesanimeesapp.models.LoginRequest
 import com.example.cartesanimeesapp.network.RetrofitClient
@@ -15,19 +16,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val request = LoginRequest("testuser", "12345")
-        RetrofitClient.instance.login(request).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                if (response.isSuccessful) {
-                    val loginResponse = response.body()
-                    println("Login Response: ${loginResponse?.message}")
-                }
-            }
+        val prefs = getSharedPreferences("auth", MODE_PRIVATE)
+        val patientId = prefs.getInt("patient_id", -1)
 
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                println("API Error: ${t.message}")
-            }
-        })
+        if (patientId == -1) {
+            // Pas connecté → aller vers LoginFragment
+            findNavController(R.id.nav_host_fragment).navigate(R.id.loginFragment)
+        } else {
+            // Déjà connecté → aller vers HomeFragment
+            findNavController(R.id.nav_host_fragment).navigate(R.id.homeFragment)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

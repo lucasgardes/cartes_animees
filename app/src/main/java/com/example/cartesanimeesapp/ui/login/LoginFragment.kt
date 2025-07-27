@@ -1,5 +1,6 @@
 package com.example.cartesanimeesapp.ui.login
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,6 +15,8 @@ import com.example.cartesanimeesapp.R
 import com.example.cartesanimeesapp.network.RetrofitClient
 import com.example.cartesanimeesapp.models.LoginRequest
 import com.example.cartesanimeesapp.models.LoginResponse
+import com.example.cartesanimeesapp.network.Constants
+import com.example.cartesanimeesapp.ui.login.LoginFragmentDirections
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -45,42 +48,48 @@ class LoginFragment : Fragment() {
         return view
     }
 
-    private fun performLogin(username: String, password: String) {
-        val request = LoginRequest(username, password)
+    private fun performLogin(email: String, password: String) {
+        RetrofitClient.apiService.loginPatient(email = email, password = password, token = Constants.API_TOKEN)
+            .enqueue(object : Callback<LoginResponse> {
+                override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                    val result = response.body()
+                    if (response.isSuccessful && result != null) {
+                        when (result.status) {
+                            "need_password" -> {
+                                Toast.makeText(requireContext(), "Veuillez créer un mot de passe", Toast.LENGTH_SHORT).show()
 
-        RetrofitClient.instance.login(request).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                if (response.isSuccessful) {
-                    val loginResponse = response.body()
-                    Toast.makeText(
-                        requireContext(),
-                        "Login successful: ${loginResponse?.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(requireContext(), "Invalid credentials", Toast.LENGTH_SHORT).show()
+                                // Tu peux passer l'ID du patient à CreatePasswordFragment avec SafeArgs ou Bundle
+                                val action = LoginFragmentDirections.actionLoginFragmentToCreatePasswordFragment(result.patient_id ?: -1)
+                                findNavController().navigate(action)
+                            }
+
+                            "success" -> {
+                                Toast.makeText(requireContext(), "Connexion réussie", Toast.LENGTH_SHORT).show()
+
+                                // Enregistrer le patient_id dans SharedPreferences
+                                val prefs = requireContext().getSharedPreferences("auth", Context.MODE_PRIVATE)
+                                prefs.edit()
+                                    .putInt("patient_id", result.patient_id ?: -1)
+                                    .putString("email", email)
+                                    .putString("password", password)
+                                    .apply()
+
+                                // Redirection vers HomeFragment
+                                findNavController().navigate(R.id.action_login_to_home)
+                            }
+
+                            else -> {
+                                Toast.makeText(requireContext(), "Erreur : ${result.error}", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(requireContext(), "Échec de connexion", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
 
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val loginButton = view.findViewById<Button>(R.id.btnLogin)
-        val registerLink = view.findViewById<TextView>(R.id.registerLink)
-
-        loginButton.setOnClickListener {
-            // Logique de connexion
-        }
-
-        // ➡️ Redirection vers l'inscription
-        registerLink.setOnClickListener {
-            findNavController().navigate(R.id.action_login_to_register)
-        }
+                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                    Toast.makeText(requireContext(), "Erreur : ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 }
