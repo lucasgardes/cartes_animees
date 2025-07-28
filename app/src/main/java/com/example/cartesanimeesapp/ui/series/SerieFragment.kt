@@ -137,6 +137,13 @@ class SerieFragment : Fragment() {
     }
 
     private fun loadSerieElement() {
+        mediaPlayer?.let {
+            if (it.isPlaying) {
+                it.stop()
+            }
+            it.release()
+            mediaPlayer = null
+        }
         val currentElement = serie.elements[currentIndex]
         val imageToShow = if (isCartoon) currentElement.image_cartoon else currentElement.image_real
         Glide.with(this)
